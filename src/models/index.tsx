@@ -11,6 +11,7 @@ export interface Post {
   id: string;
   text: string;
   images: Array<Image>;
+  created_on: string;
 }
 
 export interface Image {

@@ -1,6 +1,5 @@
 export default class HttpClient {
-  constructor(hostname: string, authToken: string) {
-    this._hostname = hostname;
+  constructor(authToken: string) {
     this._authToken = authToken;
   }
 
@@ -9,7 +8,7 @@ export default class HttpClient {
   }
 
   async doPost(path: string, body: Object) {
-    return this.doFetch(this._hostname + path, {
+    return this.doFetch(path, {
       method: "POST",
       headers: {
         "Content-Type": "application/json;charset=utf-8",
@@ -18,20 +17,26 @@ export default class HttpClient {
     });
   }
 
-  async doGet(
-    path: string,
-    queryParams: Map<string, string>,
-    init: Omit<RequestInit, "headers">
-  ) {
-    let url = new URL(this._hostname + path);
-    queryParams.forEach((v, k) => url.searchParams.append(k, v));
+  async doGet(path: string, queryParams: QueryParams) {
+    const pathAndQuery =
+      queryParams === null
+        ? path
+        : path + "?" + this.encodeQueryParams(queryParams);
 
-    return this.doFetch(url.toString(), {
-      ...init,
+    return this.doFetch(pathAndQuery, {
       headers: {
         Authorization: this._authToken,
       },
     });
+  }
+
+  private encodeQueryParams(queryParams: QueryParams): string {
+    return Object.keys(queryParams)
+      .map(
+        (k) =>
+          `${encodeURIComponent(k)}=${encodeURIComponent(queryParams[k]!!)}`
+      )
+      .join("&");
   }
 
   private async doFetch(url: string, init: RequestInit): Promise<Response> {
@@ -55,8 +60,11 @@ export default class HttpClient {
     return response;
   }
 
-  private _hostname: string;
   private _authToken: string;
+}
+
+interface QueryParams {
+  [key: string]: string;
 }
 
 class BadRequestError extends Error {}

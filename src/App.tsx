@@ -28,7 +28,7 @@ export default function App() {
 
 function HistoryAwareApp() {
   const [authToken, setAuthToken] = useState<string>("");
-  let httpClient = useRef(new HttpClient("http://localhost:5000", authToken));
+  let httpClient = useRef(new HttpClient(authToken));
   let api = useRef(new ApiImpl(httpClient.current));
 
   useEffect(() => {
@@ -76,6 +76,9 @@ function HistoryAwareApp() {
         <Route path="/explore">
           {!authToken ? <Redirect to="login" /> : <Explore api={api.current} />}
         </Route>
+        <Route path="/">
+          {!authToken ? <Redirect to="login" /> : <Explore api={api.current} />}
+        </Route>
       </Switch>
     </div>
   );
@@ -105,14 +108,28 @@ function Explore(props: ExploreProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortMethod]);
 
-  function renderPost(post: Post): React.ReactNode {
-    return <Card title={post.text}>hello</Card>;
+  function renderPosts(posts: Array<Post> | null): React.ReactNode {
+    if (posts === null) {
+      return;
+    }
+
+    console.log(posts);
+
+    return (
+      <>
+        {posts.map((it, index) => (
+          <Card key={index} title={it.text}>
+            {it.created_on}
+          </Card>
+        ))}
+      </>
+    );
   }
 
   return (
     <div>
       <h2>Explore</h2>
-      <>{posts && posts.map(renderPost)}</>
+      {renderPosts(posts)}
     </div>
   );
 }

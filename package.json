@@ -41,5 +41,6 @@
   },
   "devDependencies": {
     "@types/react": "^16.9.50"
-  }
+  },
+  "proxy": "http://localhost:5000"
 }

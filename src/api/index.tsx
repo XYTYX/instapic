@@ -22,7 +22,7 @@ export class ApiImpl implements Api {
   }
 
   async login(email: string, password: string): Promise<AuthToken> {
-    const url = "/auth/login";
+    const url = "/v1/auth/login";
     let result: Response;
     try {
       result = await this._client.doPost(url, {
@@ -50,7 +50,7 @@ export class ApiImpl implements Api {
     username: string,
     password: string
   ): Promise<AuthToken> {
-    const url = "/user";
+    const url = "/v1/user";
     let result: Response;
     try {
       result = await this._client.doPost(url, {
@@ -74,16 +74,19 @@ export class ApiImpl implements Api {
   async getPosts(sortBy: SortBy): Promise<Array<Post>> {
     let result: Response;
 
-    // const queryParams = new Map([["sort_by", sortBy]]);
-    const queryParams = new Map();
+    const queryParams = {
+      sort_by: SortBy.MOST_RECENT,
+    };
 
     try {
-      result = await this._client.doGet("/post", queryParams, {});
-      return result.json()!!;
+      result = await this._client.doGet("/v1/post", queryParams);
+      return result.json();
     } catch (e) {
       throw e;
     }
   }
+
+  async newPost();
 
   private _client: HttpClient;
 }
