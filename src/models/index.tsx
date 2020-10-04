@@ -3,6 +3,6 @@ export interface User {
   username: string;
 }
 
-export interface Login {
+export interface AuthToken {
   authorization: string;
 }

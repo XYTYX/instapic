@@ -1,25 +1,74 @@
-import { doFetch } from "./apiHelper";
-import { Login } from "./models";
+import {
+  ConflictError,
+  doPost,
+  InternalServerError,
+  UnauthorizedError,
+} from "./apiHelper";
+import { AuthToken } from "../models";
 
 export interface Api {
-  login(email: string, password: string): Promise<Login>;
+  login(email: string, password: string): Promise<AuthToken>;
+  signup(email: string, username: string, password: string): Promise<AuthToken>;
 }
 
-export function ApiImpl(baseUrl: string): Api {
-  async function login(email: string, password: string): Promise<Login> {
-    const url = "/auth/login";
-    const result = await doFetch(baseUrl + url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json;charset=utf-8",
-      },
-      body: JSON.stringify({
-        email: email,
-        password: password,
-      }),
-    });
-    return result.json();
+export class ApiImpl implements Api {
+  constructor(baseUrl: string) {
+    this._baseUrl = baseUrl;
   }
 
-  return { login };
+  async login(email: string, password: string): Promise<AuthToken> {
+    const url = "/auth/login";
+    let result: Response;
+    try {
+      result = await doPost(this._baseUrl + url, {
+        email: email,
+        password: password,
+      });
+      return result.json();
+    } catch (e) {
+      switch (e) {
+        case e instanceof UnauthorizedError: {
+          throw new LoginFailedError();
+        }
+        case e instanceof InternalServerError: {
+          throw new DownstreamError();
+        }
+        default: {
+          throw e;
+        }
+      }
+    }
+  }
+
+  async signup(
+    email: string,
+    username: string,
+    password: string
+  ): Promise<AuthToken> {
+    const url = "/user";
+    let result: Response;
+    try {
+      result = await doPost(this._baseUrl + url, {
+        email: email,
+        username: username,
+        password: password,
+      });
+      return result.json();
+    } catch (e) {
+      switch (e) {
+        case e instanceof ConflictError: {
+          throw new UserAlreadyExistsError();
+        }
+        default: {
+          throw e;
+        }
+      }
+    }
+  }
+
+  private _baseUrl: string;
 }
+
+export class LoginFailedError extends Error {}
+export class DownstreamError extends Error {}
+export class UserAlreadyExistsError extends Error {}

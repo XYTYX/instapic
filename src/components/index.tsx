@@ -1,4 +1,5 @@
 import React from "react";
+// import { Input } from "antd";
 
 interface InputProps {
   type?: string;
@@ -22,7 +23,8 @@ interface FormProps {
 }
 
 export function Form(props: FormProps) {
-  function onSubmit() {
+  function onSubmit(ev: React.ChangeEvent<HTMLFormElement>) {
+    ev.preventDefault();
     props.onSubmit();
   }
 
