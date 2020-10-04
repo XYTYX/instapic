@@ -75,7 +75,7 @@ export class ApiImpl implements Api {
     let result: Response;
 
     const queryParams = {
-      sort_by: SortBy.MOST_RECENT,
+      sort_by: sortBy,
     };
 
     try {
