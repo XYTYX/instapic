@@ -17,7 +17,7 @@ export default class HttpClient {
     });
   }
 
-  async doGet(path: string, queryParams: QueryParams) {
+  async doGet(path: string, queryParams: QueryParams | null) {
     const pathAndQuery =
       queryParams === null
         ? path

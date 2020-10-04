@@ -86,8 +86,6 @@ export class ApiImpl implements Api {
     }
   }
 
-  async newPost();
-
   private _client: HttpClient;
 }
 
