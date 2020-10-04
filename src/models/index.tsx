@@ -6,3 +6,13 @@ export interface User {
 export interface AuthToken {
   authorization: string;
 }
+
+export interface Post {
+  id: string;
+  text: string;
+  images: Array<Image>;
+}
+
+export interface Image {
+  path: string;
+}

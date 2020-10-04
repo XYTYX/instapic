@@ -1,8 +1,8 @@
 import { createBrowserHistory } from "history";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Redirect, Route, Router, Switch } from "react-router";
 import { Link } from "react-router-dom";
-import { Input, Form } from "antd";
+import { Input, Form, Card } from "antd";
 import {
   Api,
   ApiImpl,
@@ -11,6 +11,8 @@ import {
   UserAlreadyExistsError,
 } from "./api";
 import "./App.css";
+import { AuthToken, Post } from "./models";
+import HttpClient from "./api/client";
 
 export default function App() {
   const customHistory = createBrowserHistory();
@@ -25,14 +27,20 @@ export default function App() {
 }
 
 function HistoryAwareApp() {
-  const [loggedIn, setLoggedIn] = useState<boolean>(false);
-  const api = new ApiImpl("http://localhost:5000");
+  const [authToken, setAuthToken] = useState<string>("");
+  let httpClient = useRef(new HttpClient("http://localhost:5000", authToken));
+  let api = useRef(new ApiImpl(httpClient.current));
+
+  useEffect(() => {
+    httpClient.current.setAuthToken(authToken);
+    api.current.setClient(httpClient.current);
+  }, [authToken]);
 
   return (
     <div className="App">
       <nav>
         <ul>
-          {!loggedIn && (
+          {!authToken && (
             <>
               <li>
                 <Link to="/login">Login</Link>
@@ -42,9 +50,9 @@ function HistoryAwareApp() {
               </li>
             </>
           )}
-          {loggedIn && (
+          {authToken && (
             <li>
-              <Link to="/">Explore</Link>
+              <Link to="/explore">Explore</Link>
             </li>
           )}
         </ul>
@@ -52,21 +60,21 @@ function HistoryAwareApp() {
 
       <Switch>
         <Route path="/login">
-          {loggedIn ? (
+          {authToken ? (
             <Redirect to="/" />
           ) : (
-            <Login api={api} setLoggedIn={setLoggedIn} />
+            <Login api={api.current} setAuthToken={setAuthToken} />
           )}
         </Route>
         <Route path="/signup">
-          {loggedIn ? (
+          {authToken ? (
             <Redirect to="/" />
           ) : (
-            <Signup api={api} setLoggedIn={setLoggedIn} />
+            <Signup api={api.current} setAuthToken={setAuthToken} />
           )}
         </Route>
-        <Route path="/">
-          <Explore api={api} />
+        <Route path="/explore">
+          {!authToken ? <Redirect to="login" /> : <Explore api={api.current} />}
         </Route>
       </Switch>
     </div>
@@ -77,26 +85,51 @@ interface ExploreProps {
   api: Api;
 }
 
+export enum SortBy {
+  MOST_RECENT = "most_recent",
+  BY_USER = "by_user",
+}
+
 function Explore(props: ExploreProps) {
   const [loading, setLoading] = useState<boolean>(false);
+  const [posts, setPosts] = useState<Array<Post> | null>(null);
+  const [sortMethod, setSortMethod] = useState<SortBy>(SortBy.MOST_RECENT);
+
   useEffect(() => {
-    await props.api.
-  });
-  return <h2>Explore</h2>;
+    async function getPosts() {
+      let posts: Array<Post>;
+      posts = await props.api.getPosts(sortMethod);
+      setPosts(posts);
+    }
+    getPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortMethod]);
+
+  function renderPost(post: Post): React.ReactNode {
+    return <Card title={post.text}>hello</Card>;
+  }
+
+  return (
+    <div>
+      <h2>Explore</h2>
+      <>{posts && posts.map(renderPost)}</>
+    </div>
+  );
 }
 
 interface LoginProps {
   api: Api;
-  setLoggedIn(loggedIn: boolean): void;
+  setAuthToken(authToken: string): void;
 }
 
 function Login(props: LoginProps) {
   const [error, setError] = useState<string>("");
 
   async function onSubmit({ email, password }: any) {
-    let response;
+    let response: AuthToken;
     try {
       response = await props.api.login(email, password);
+      props.setAuthToken(response.authorization);
     } catch (e) {
       switch (e) {
         case e instanceof LoginFailedError: {
@@ -113,8 +146,6 @@ function Login(props: LoginProps) {
         }
       }
     }
-    console.log(response?.authorization);
-    props.setLoggedIn(true);
   }
 
   return (
@@ -135,26 +166,28 @@ function Login(props: LoginProps) {
 
 interface SignupProps {
   api: Api;
-  setLoggedIn(loggedIn: boolean): void;
+  setAuthToken(authToken: string): void;
 }
 
 function Signup(props: SignupProps) {
   const [error, setError] = useState<string>("");
 
   async function onSubmit({ email, username, password }: any) {
-    let response;
+    let response: AuthToken;
     try {
       response = await props.api.signup(email, username, password);
+      props.setAuthToken(response?.authorization);
     } catch (e) {
       switch (e) {
         case e instanceof UserAlreadyExistsError: {
           setError("Email is already registered, did you mean to log in?");
           break;
         }
+        default: {
+          throw e;
+        }
       }
     }
-    console.log(response?.authorization);
-    props.setLoggedIn(true);
   }
 
   return (

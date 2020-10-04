@@ -1,30 +1,35 @@
-import {
+import HttpClient, {
   ConflictError,
-  doPost,
   InternalServerError,
   UnauthorizedError,
-} from "./apiHelper";
-import { AuthToken } from "../models";
+} from "./client";
+import { AuthToken, Post } from "../models";
+import { SortBy } from "../App";
 
 export interface Api {
   login(email: string, password: string): Promise<AuthToken>;
   signup(email: string, username: string, password: string): Promise<AuthToken>;
+  getPosts(sortBy: SortBy): Promise<Array<Post>>;
 }
 
 export class ApiImpl implements Api {
-  constructor(baseUrl: string) {
-    this._baseUrl = baseUrl;
+  constructor(client: HttpClient) {
+    this._client = client;
+  }
+
+  setClient(client: HttpClient) {
+    this._client = client;
   }
 
   async login(email: string, password: string): Promise<AuthToken> {
     const url = "/auth/login";
     let result: Response;
     try {
-      result = await doPost(this._baseUrl + url, {
+      result = await this._client.doPost(url, {
         email: email,
         password: password,
       });
-      return result.json();
+      return result.json()!!;
     } catch (e) {
       switch (e) {
         case e instanceof UnauthorizedError: {
@@ -48,12 +53,12 @@ export class ApiImpl implements Api {
     const url = "/user";
     let result: Response;
     try {
-      result = await doPost(this._baseUrl + url, {
+      result = await this._client.doPost(url, {
         email: email,
         username: username,
         password: password,
       });
-      return result.json();
+      return result.json()!!;
     } catch (e) {
       switch (e) {
         case e instanceof ConflictError: {
@@ -66,7 +71,21 @@ export class ApiImpl implements Api {
     }
   }
 
-  private _baseUrl: string;
+  async getPosts(sortBy: SortBy): Promise<Array<Post>> {
+    let result: Response;
+
+    // const queryParams = new Map([["sort_by", sortBy]]);
+    const queryParams = new Map();
+
+    try {
+      result = await this._client.doGet("/post", queryParams, {});
+      return result.json()!!;
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  private _client: HttpClient;
 }
 
 export class LoginFailedError extends Error {}
