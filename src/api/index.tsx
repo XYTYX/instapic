@@ -74,6 +74,7 @@ export class ApiImpl implements Api {
   async getPosts(sortBy: SortBy): Promise<Array<Post>> {
     let result: Response;
 
+    // Query
     const queryParams = {
       sort_by: sortBy,
     };
