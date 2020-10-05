@@ -28,7 +28,9 @@ export default function App() {
 
 function HistoryAwareApp() {
   const [authToken, setAuthToken] = useState<string>("");
-  let httpClient = useRef(new HttpClient(authToken));
+  let httpClient = useRef(
+    new HttpClient("https://serv.instapic.site", authToken)
+  );
   let api = useRef(new ApiImpl(httpClient.current));
 
   useEffect(() => {
