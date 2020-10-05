@@ -1,6 +1,5 @@
 export default class HttpClient {
-  constructor(baseUrl: string, authToken: string) {
-    this._baseUrl = baseUrl;
+  constructor(authToken: string) {
     this._authToken = authToken;
   }
 
@@ -24,7 +23,7 @@ export default class HttpClient {
         ? path
         : path + "?" + this.encodeQueryParams(queryParams);
 
-    return this.doFetch(this._baseUrl + pathAndQuery, {
+    return this.doFetch(pathAndQuery, {
       headers: {
         Authorization: this._authToken,
       },
