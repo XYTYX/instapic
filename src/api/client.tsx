@@ -42,7 +42,7 @@ export default class HttpClient {
   private async doFetch(url: string, init: RequestInit): Promise<Response> {
     let response: Response;
     try {
-      response = await fetch(url, init);
+      response = await fetch("/api" + url, init);
     } catch (e) {
       throw e;
     }
