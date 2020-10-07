@@ -60,7 +60,6 @@ export default class HttpClient {
     return response;
   }
 
-  private _baseUrl: string;
   private _authToken: string;
 }
 
