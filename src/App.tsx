@@ -2,7 +2,7 @@ import { createBrowserHistory } from "history";
 import React, { useEffect, useRef, useState } from "react";
 import { Redirect, Route, Router, Switch } from "react-router";
 import { Link } from "react-router-dom";
-import { Input, Form, Card } from "antd";
+import { Input, Form, Card, Button, Upload, message } from "antd";
 import {
   Api,
   ApiImpl,
@@ -10,9 +10,15 @@ import {
   LoginFailedError,
   UserAlreadyExistsError,
 } from "./api";
+import { UploadOutlined } from "@ant-design/icons";
 import "./App.css";
 import { AuthToken, Post } from "./models";
 import HttpClient from "./api/client";
+import Modal from "antd/lib/modal/Modal";
+import { UploadChangeParam } from "antd/lib/upload";
+import { UploadFile } from "antd/lib/upload/interface";
+import { useForm } from "antd/lib/form/Form";
+import { Store } from "antd/lib/form/interface";
 
 export default function App() {
   const customHistory = createBrowserHistory();
@@ -30,6 +36,16 @@ function HistoryAwareApp() {
   const [authToken, setAuthToken] = useState<string>("");
   let httpClient = useRef(new HttpClient(authToken));
   let api = useRef(new ApiImpl(httpClient.current));
+
+  const [visibleModal, setVisibleModal] = useState<boolean>(false);
+
+  function showModal() {
+    setVisibleModal(true);
+  }
+
+  function hideModal() {
+    setVisibleModal(false);
+  }
 
   useEffect(() => {
     httpClient.current.setAuthToken(authToken);
@@ -51,9 +67,21 @@ function HistoryAwareApp() {
             </>
           )}
           {authToken && (
-            <li>
-              <Link to="/explore">Explore</Link>
-            </li>
+            <>
+              <li>
+                <Link to="/explore">Explore</Link>
+              </li>
+              <li>
+                <Link to="new_post">
+                  <Button onClick={showModal}>New Post</Button>
+                  <NewPost
+                    hideModal={hideModal}
+                    visible={visibleModal}
+                    api={api.current}
+                  />
+                </Link>
+              </li>
+            </>
           )}
         </ul>
       </nav>
@@ -81,6 +109,107 @@ function HistoryAwareApp() {
         </Route>
       </Switch>
     </div>
+  );
+}
+
+interface NewPostProps {
+  api: Api;
+  visible: boolean;
+  hideModal(): void;
+}
+
+function NewPost(props: NewPostProps) {
+  const [fileList, setFileList] = useState<Array<UploadFile>>([]);
+  const [confirmLoading, setConfirmLoading] = useState<boolean>(false);
+  const [form] = useForm();
+
+  function onSubmit() {
+    form.validateFields().then(async (values: Store) => {
+      const fileContainer: UploadChangeParam = values.file;
+      const text: string = values.text;
+      let result;
+      console.log(values);
+      setConfirmLoading(true);
+      try {
+        result = await props.api.newPost(
+          fileContainer.file.originFileObj!!,
+          text
+        );
+      } catch (e) {}
+      setConfirmLoading(false);
+      props.hideModal();
+    });
+  }
+
+  function onChange(info: UploadChangeParam) {
+    let newFileList: Array<UploadFile> = [];
+    switch (info.file.status) {
+      case "uploading":
+        newFileList = [info.file];
+        break;
+      case "done":
+        newFileList = [info.file];
+        break;
+      default:
+        newFileList = [];
+    }
+    setFileList(newFileList);
+  }
+
+  function dummyRequest({ onSuccess }: any) {
+    setTimeout(() => {
+      onSuccess("ok");
+    }, 0);
+  }
+
+  function validateFiletype(file: UploadFile) {
+    const acceptedFileTypes = [
+      "image/png",
+      "image/jpg",
+      "image/jpeg",
+      "image/gif",
+    ];
+
+    if (!acceptedFileTypes.includes(file.type)) {
+      message.error(`${file.name} is not in a file format that we support`);
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  return (
+    <Modal
+      title="New Post"
+      visible={props.visible}
+      onCancel={props.hideModal}
+      okText="Submit"
+      okButtonProps={{ disabled: fileList.length === 0 }}
+      onOk={onSubmit}
+      confirmLoading={confirmLoading}
+    >
+      <Form form={form} preserve={false} name="validate_other">
+        <Form.Item
+          name="file"
+          label="Image"
+          extra="Please upload a .png, .jpg, .jpeg, or .gif image"
+        >
+          <Upload
+            customRequest={dummyRequest}
+            onChange={onChange}
+            fileList={fileList}
+            name="logo"
+            listType="picture"
+            beforeUpload={validateFiletype}
+          >
+            <Button icon={<UploadOutlined />}>Click to upload</Button>
+          </Upload>
+        </Form.Item>
+        <Form.Item name="text" label="Subtitle">
+          <Input required />
+        </Form.Item>
+      </Form>
+    </Modal>
   );
 }
 
@@ -112,8 +241,6 @@ function Explore(props: ExploreProps) {
     if (posts === null) {
       return;
     }
-
-    console.log(posts);
 
     return (
       <>

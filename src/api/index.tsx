@@ -10,6 +10,7 @@ export interface Api {
   login(email: string, password: string): Promise<AuthToken>;
   signup(email: string, username: string, password: string): Promise<AuthToken>;
   getPosts(sortBy: SortBy): Promise<Array<Post>>;
+  newPost(file: File | Blob, text: string): Promise<Post>;
 }
 
 export class ApiImpl implements Api {
@@ -21,11 +22,25 @@ export class ApiImpl implements Api {
     this._client = client;
   }
 
+  async newPost(file: File | Blob, text: string): Promise<Post> {
+    const url = "/v1/post";
+    let result: Response;
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("text", text);
+    try {
+      result = await this._client.doPostFormData(url, formData);
+    } catch (e) {
+      throw e;
+    }
+    return result.json()!!;
+  }
+
   async login(email: string, password: string): Promise<AuthToken> {
     const url = "/v1/auth/login";
     let result: Response;
     try {
-      result = await this._client.doPost(url, {
+      result = await this._client.doPostJson(url, {
         email: email,
         password: password,
       });
@@ -53,7 +68,7 @@ export class ApiImpl implements Api {
     const url = "/v1/user";
     let result: Response;
     try {
-      result = await this._client.doPost(url, {
+      result = await this._client.doPostJson(url, {
         email: email,
         username: username,
         password: password,

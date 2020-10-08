@@ -7,7 +7,14 @@ export default class HttpClient {
     this._authToken = authToken;
   }
 
-  async doPost(path: string, body: Object) {
+  async doPostFormData(path: string, formData: FormData) {
+    return this.doFetch(path, {
+      method: "POST",
+      body: formData,
+    });
+  }
+
+  async doPostJson(path: string, body: Object) {
     return this.doFetch(path, {
       method: "POST",
       headers: {
@@ -40,9 +47,16 @@ export default class HttpClient {
   }
 
   private async doFetch(url: string, init: RequestInit): Promise<Response> {
+    let { headers, ...rest } = init;
+    let finalHeaders = { ...headers };
+
+    if (this._authToken) {
+      finalHeaders = { ...headers, Authorization: this._authToken };
+    }
+
     let response: Response;
     try {
-      response = await fetch("/api" + url, init);
+      response = await fetch("/api" + url, { ...rest, headers: finalHeaders });
     } catch (e) {
       throw e;
     }
