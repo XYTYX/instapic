@@ -88,13 +88,10 @@ export class ApiImpl implements Api {
       });
       return result.json()!!;
     } catch (e) {
-      switch (e) {
-        case e instanceof ConflictError: {
-          throw new UserAlreadyExistsError();
-        }
-        default: {
-          throw e;
-        }
+      if (e instanceof ConflictError) {
+        throw new UserAlreadyExistsError();
+      } else {
+        throw e;
       }
     }
   }

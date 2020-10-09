@@ -18,6 +18,16 @@ code {
   align-items: center;
 }
 
+.rowFeed {
+  display: flex;
+  flex-direction: row;
+}
+
+.rowCard {
+  max-width: 300px;
+  max-height: 300px;
+}
+
 .image {
   max-width: 900px;
 }

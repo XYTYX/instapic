@@ -89,7 +89,7 @@ function HistoryAwareApp() {
         {!authToken && (
           <>
             <Link to="/login">
-              <Button>Login</Button>
+              <Button>Log In</Button>
             </Link>
             <Link to="/signup">
               <Button>Signup</Button>
@@ -288,13 +288,8 @@ function Explore(props: ExploreProps) {
       </Menu>
     );
 
-    return (
-      <>
-        <Dropdown overlay={dropdownMenu} trigger={["click"]}>
-          <Button type="text">
-            Sort By <DownOutlined />
-          </Button>
-        </Dropdown>
+    function renderMostRecent(posts: Array<Post>): React.ReactNode {
+      return (
         <div className="feed">
           {posts.map((it, index) => (
             <Card className="card" key={index}>
@@ -303,10 +298,50 @@ function Explore(props: ExploreProps) {
                 src={it.images[0].full_src}
                 alt="hello"
               />
-              <Meta title={it.text} />
+              <Meta title={it.text ? it.text : ""} />
             </Card>
           ))}
         </div>
+      );
+    }
+
+    function renderByUser(posts: Array<Post>): React.ReactNode {
+      const seenUsers: Set<string> = new Set();
+      const filteredPosts: Array<Post> = [];
+
+      posts.forEach((it) => {
+        if (!seenUsers.has(it.user_id)) {
+          seenUsers.add(it.user_id);
+          filteredPosts.push(it);
+        }
+      });
+
+      return (
+        <div className="rowFeed">
+          {filteredPosts.map((it, index) => (
+            <Card className="rowCard" key={index}>
+              <Image
+                className="image"
+                src={it.images[0].full_src}
+                alt="hello"
+              />
+              <Meta title={} />
+            </Card>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <Dropdown overlay={dropdownMenu} trigger={["click"]}>
+          <Button type="text">
+            Sort By <DownOutlined />
+          </Button>
+        </Dropdown>
+        {sortMethod === SortBy.MOST_RECENT
+          ? renderMostRecent(posts)
+          : renderByUser(posts)}
       </>
     );
   }
@@ -333,34 +368,44 @@ function Login(props: LoginProps) {
       response = await props.api.login(email, password);
       props.setAuthToken(response.authorization);
     } catch (e) {
-      switch (e) {
-        case e instanceof LoginFailedError: {
-          setError(
-            "Login unsuccessful, check your email and password. Did you mean to sign up?"
-          );
-          break;
-        }
-        case e instanceof DownstreamError: {
-          setError(
-            "Our systems seem to be experiencing issues, please try again later"
-          );
-          break;
-        }
+      if (e instanceof LoginFailedError) {
+        message.error(
+          "Login unsuccessful, check your email and password. Did you mean to sign up?"
+        );
+      } else if (e instanceof DownstreamError) {
+        message.error(
+          "Our systems seem to be experiencing issues, please try again later"
+        );
+      } else {
+        throw e;
       }
     }
   }
 
   return (
     <div className="authForm">
-      <h2 className="spaced">Login</h2>
+      <h2 className="spaced">Log In</h2>
       <Form onFinish={onSubmit}>
-        <Form.Item label="Email" name="email">
-          <Input required />
+        <Form.Item
+          required
+          label="Email"
+          name="email"
+          rules={[
+            { required: true, message: "Please enter an email" },
+            { type: "email" },
+          ]}
+        >
+          <Input />
         </Form.Item>
-        <Form.Item label="Password" name="password">
-          <Input.Password required />
+        <Form.Item
+          required
+          label="Password"
+          name="password"
+          rules={[{ required: true, message: "Please enter a password" }]}
+        >
+          <Input.Password />
         </Form.Item>
-        <button>Submit</button>
+        <button>Log In</button>
       </Form>
     </div>
   );
@@ -372,40 +417,61 @@ interface SignupProps {
 }
 
 function Signup(props: SignupProps) {
-  const [error, setError] = useState<string>("");
-
   async function onSubmit({ email, username, password }: any) {
     let response: AuthToken;
     try {
       response = await props.api.signup(email, username, password);
       props.setAuthToken(response?.authorization);
     } catch (e) {
-      switch (e) {
-        case e instanceof UserAlreadyExistsError: {
-          setError("Email is already registered, did you mean to log in?");
-          break;
-        }
-        default: {
-          throw e;
-        }
+      if (e instanceof UserAlreadyExistsError) {
+        message.error(
+          "That email or username already exists, did you mean to log in?"
+        );
+      } else {
+        throw e;
       }
     }
   }
 
   return (
     <div className="authForm">
-      <h2 className="spaced">Sign up</h2>
+      <h2 className="spaced">Sign Up</h2>
       <Form onFinish={onSubmit}>
-        <Form.Item label="Email" name="email">
+        <Form.Item
+          required
+          label="Email"
+          name="email"
+          rules={[
+            { required: true, message: "Please enter an email" },
+            { type: "email" },
+          ]}
+        >
           <Input />
         </Form.Item>
-        <Form.Item label="Username" name="username">
+        <Form.Item
+          required
+          label="Username"
+          name="username"
+          rules={[{ required: true, message: "Please enter a username" }]}
+        >
           <Input />
         </Form.Item>
-        <Form.Item label="Password" name="password">
+        <Form.Item
+          required
+          label="Password"
+          name="password"
+          rules={[
+            { required: true, message: "Please enter a password" },
+            {
+              min: 8,
+              message:
+                "Make sure your password is at least 8 characters in length",
+            },
+          ]}
+        >
           <Input.Password />
         </Form.Item>
-        <button>Submit</button>
+        <button>Sign Up</button>
       </Form>
     </div>
   );

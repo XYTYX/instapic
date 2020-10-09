@@ -9,9 +9,10 @@ export interface AuthToken {
 
 export interface Post {
   id: string;
-  text: string;
+  text: string | undefined;
   images: Array<Image>;
   created_on: string;
+  user_id: string;
 }
 
 export interface Image {
