@@ -51,7 +51,7 @@ export default class HttpClient {
     let finalHeaders = { ...headers };
 
     if (this._authToken) {
-      finalHeaders = { ...headers, Authorization: this._authToken };
+      finalHeaders = { ...headers, Authorization: `Bearer ${this._authToken}` };
     }
 
     let response: Response;

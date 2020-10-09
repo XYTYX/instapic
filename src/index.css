@@ -11,3 +11,28 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.image {
+  max-width: 900px;
+}
+
+.authForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ascii {
+  font-family: monospace;
+  white-space: pre
+}
+
+.spaced {
+  margin-top: 6px
+}

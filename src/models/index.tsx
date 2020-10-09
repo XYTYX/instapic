@@ -15,5 +15,5 @@ export interface Post {
 }
 
 export interface Image {
-  path: string;
+  full_src: string;
 }

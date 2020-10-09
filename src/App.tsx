@@ -2,7 +2,17 @@ import { createBrowserHistory } from "history";
 import React, { useEffect, useRef, useState } from "react";
 import { Redirect, Route, Router, Switch } from "react-router";
 import { Link } from "react-router-dom";
-import { Input, Form, Card, Button, Upload, message } from "antd";
+import {
+  Input,
+  Form,
+  Card,
+  Button,
+  Upload,
+  message,
+  Image,
+  Menu,
+  Dropdown,
+} from "antd";
 import {
   Api,
   ApiImpl,
@@ -10,7 +20,7 @@ import {
   LoginFailedError,
   UserAlreadyExistsError,
 } from "./api";
-import { UploadOutlined } from "@ant-design/icons";
+import { DownOutlined, UploadOutlined } from "@ant-design/icons";
 import "./App.css";
 import { AuthToken, Post } from "./models";
 import HttpClient from "./api/client";
@@ -19,6 +29,9 @@ import { UploadChangeParam } from "antd/lib/upload";
 import { UploadFile } from "antd/lib/upload/interface";
 import { useForm } from "antd/lib/form/Form";
 import { Store } from "antd/lib/form/interface";
+import "./App.css";
+import { MenuInfo } from "rc-menu/lib/interface";
+import Meta from "antd/lib/card/Meta";
 
 export default function App() {
   const customHistory = createBrowserHistory();
@@ -32,8 +45,14 @@ export default function App() {
   );
 }
 
+export enum SortBy {
+  MOST_RECENT = "most_recent",
+  BY_USER = "by_user",
+}
+
 function HistoryAwareApp() {
   const [authToken, setAuthToken] = useState<string>("");
+  const [posts, setPosts] = useState<Array<Post>>([]);
   let httpClient = useRef(new HttpClient(authToken));
   let api = useRef(new ApiImpl(httpClient.current));
 
@@ -47,6 +66,17 @@ function HistoryAwareApp() {
     setVisibleModal(false);
   }
 
+  async function getPosts(sortBy: SortBy) {
+    let posts: Array<Post>;
+    posts = await api.current.getPosts(sortBy);
+    setPosts(posts);
+  }
+
+  async function logout() {
+    await api.current.logout();
+    setAuthToken("");
+  }
+
   useEffect(() => {
     httpClient.current.setAuthToken(authToken);
     api.current.setClient(httpClient.current);
@@ -54,38 +84,36 @@ function HistoryAwareApp() {
 
   return (
     <div className="App">
+      <p className="spaced"></p>
       <nav>
-        <ul>
-          {!authToken && (
-            <>
-              <li>
-                <Link to="/login">Login</Link>
-              </li>
-              <li>
-                <Link to="/signup">Signup</Link>
-              </li>
-            </>
-          )}
-          {authToken && (
-            <>
-              <li>
-                <Link to="/explore">Explore</Link>
-              </li>
-              <li>
-                <Link to="new_post">
-                  <Button onClick={showModal}>New Post</Button>
-                  <NewPost
-                    hideModal={hideModal}
-                    visible={visibleModal}
-                    api={api.current}
-                  />
-                </Link>
-              </li>
-            </>
-          )}
-        </ul>
+        {!authToken && (
+          <>
+            <Link to="/login">
+              <Button>Login</Button>
+            </Link>
+            <Link to="/signup">
+              <Button>Signup</Button>
+            </Link>
+          </>
+        )}
+        {authToken && (
+          <>
+            <Link to="/explore">
+              <Button>Explore</Button>
+            </Link>
+            <Link to="new_post">
+              <Button onClick={showModal}>New Post</Button>
+              <NewPost
+                getPosts={getPosts}
+                hideModal={hideModal}
+                visible={visibleModal}
+                api={api.current}
+              />
+            </Link>
+            <Button onClick={logout}>Log Out</Button>
+          </>
+        )}
       </nav>
-
       <Switch>
         <Route path="/login">
           {authToken ? (
@@ -102,10 +130,18 @@ function HistoryAwareApp() {
           )}
         </Route>
         <Route path="/explore">
-          {!authToken ? <Redirect to="login" /> : <Explore api={api.current} />}
+          {!authToken ? (
+            <Redirect to="login" />
+          ) : (
+            <Explore posts={posts} getPosts={getPosts} api={api.current} />
+          )}
         </Route>
         <Route path="/">
-          {!authToken ? <Redirect to="login" /> : <Explore api={api.current} />}
+          {!authToken ? (
+            <Redirect to="login" />
+          ) : (
+            <Explore posts={posts} getPosts={getPosts} api={api.current} />
+          )}
         </Route>
       </Switch>
     </div>
@@ -116,6 +152,7 @@ interface NewPostProps {
   api: Api;
   visible: boolean;
   hideModal(): void;
+  getPosts(sortBy: SortBy): void;
 }
 
 function NewPost(props: NewPostProps) {
@@ -138,6 +175,9 @@ function NewPost(props: NewPostProps) {
       } catch (e) {}
       setConfirmLoading(false);
       props.hideModal();
+      try {
+        await props.getPosts(SortBy.MOST_RECENT);
+      } catch (e) {}
     });
   }
 
@@ -215,48 +255,66 @@ function NewPost(props: NewPostProps) {
 
 interface ExploreProps {
   api: Api;
-}
-
-export enum SortBy {
-  MOST_RECENT = "most_recent",
-  BY_USER = "by_user",
+  posts: Array<Post>;
+  getPosts(sortBy: SortBy): void;
 }
 
 function Explore(props: ExploreProps) {
-  const [loading, setLoading] = useState<boolean>(false);
   const [posts, setPosts] = useState<Array<Post> | null>(null);
   const [sortMethod, setSortMethod] = useState<SortBy>(SortBy.MOST_RECENT);
 
   useEffect(() => {
-    async function getPosts() {
-      let posts: Array<Post>;
-      posts = await props.api.getPosts(sortMethod);
-      setPosts(posts);
-    }
-    getPosts();
+    props.getPosts(sortMethod);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortMethod]);
 
   function renderPosts(posts: Array<Post> | null): React.ReactNode {
-    if (posts === null) {
+    if (posts === null || posts.length === 0) {
       return;
     }
 
+    function onSortMethodClick({ key }: MenuInfo) {
+      if (key === SortBy.MOST_RECENT) {
+        setSortMethod(SortBy.MOST_RECENT);
+      } else {
+        setSortMethod(SortBy.BY_USER);
+      }
+    }
+
+    const dropdownMenu = (
+      <Menu onClick={onSortMethodClick}>
+        <Menu.Item key={SortBy.MOST_RECENT}>Most Recent</Menu.Item>
+        <Menu.Item key={SortBy.BY_USER}>By User</Menu.Item>
+      </Menu>
+    );
+
     return (
       <>
-        {posts.map((it, index) => (
-          <Card key={index} title={it.text}>
-            {it.created_on}
-          </Card>
-        ))}
+        <Dropdown overlay={dropdownMenu} trigger={["click"]}>
+          <Button type="text">
+            Sort By <DownOutlined />
+          </Button>
+        </Dropdown>
+        <div className="feed">
+          {posts.map((it, index) => (
+            <Card className="card" key={index}>
+              <Image
+                className="image"
+                src={it.images[0].full_src}
+                alt="hello"
+              />
+              <Meta title={it.text} />
+            </Card>
+          ))}
+        </div>
       </>
     );
   }
 
   return (
-    <div>
-      <h2>Explore</h2>
-      {renderPosts(posts)}
+    <div className="spaced">
+      <h2 style={{ marginBottom: 0 }}>Explore</h2>
+      {renderPosts(props.posts)}
     </div>
   );
 }
@@ -293,8 +351,8 @@ function Login(props: LoginProps) {
   }
 
   return (
-    <div>
-      <h2>Login</h2>
+    <div className="authForm">
+      <h2 className="spaced">Login</h2>
       <Form onFinish={onSubmit}>
         <Form.Item label="Email" name="email">
           <Input required />
@@ -335,8 +393,8 @@ function Signup(props: SignupProps) {
   }
 
   return (
-    <div>
-      <h2>Sign up</h2>
+    <div className="authForm">
+      <h2 className="spaced">Sign up</h2>
       <Form onFinish={onSubmit}>
         <Form.Item label="Email" name="email">
           <Input />

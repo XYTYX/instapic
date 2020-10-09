@@ -9,6 +9,7 @@ import { SortBy } from "../App";
 export interface Api {
   login(email: string, password: string): Promise<AuthToken>;
   signup(email: string, username: string, password: string): Promise<AuthToken>;
+  logout(): Promise<void>;
   getPosts(sortBy: SortBy): Promise<Array<Post>>;
   newPost(file: File | Blob, text: string): Promise<Post>;
 }
@@ -22,14 +23,26 @@ export class ApiImpl implements Api {
     this._client = client;
   }
 
+  async logout(): Promise<void> {
+    const path = "/v1/auth/logout";
+    let result: Response;
+
+    try {
+      result = await this._client.doPostJson(path, {});
+    } catch (e) {
+      throw e;
+    }
+    return;
+  }
+
   async newPost(file: File | Blob, text: string): Promise<Post> {
-    const url = "/v1/post";
+    const path = "/v1/post";
     let result: Response;
     const formData = new FormData();
     formData.append("file", file);
     formData.append("text", text);
     try {
-      result = await this._client.doPostFormData(url, formData);
+      result = await this._client.doPostFormData(path, formData);
     } catch (e) {
       throw e;
     }
@@ -89,7 +102,6 @@ export class ApiImpl implements Api {
   async getPosts(sortBy: SortBy): Promise<Array<Post>> {
     let result: Response;
 
-    // Query
     const queryParams = {
       sort_by: sortBy,
     };
