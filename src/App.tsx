@@ -20,7 +20,11 @@ import {
   LoginFailedError,
   UserAlreadyExistsError,
 } from "./api";
-import { DownOutlined, UploadOutlined } from "@ant-design/icons";
+import {
+  DownOutlined,
+  ExpandAltOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
 import { AuthToken, Post } from "./models";
 import HttpClient from "./api/client";
 import Modal from "antd/lib/modal/Modal";
@@ -169,7 +173,7 @@ function NewPost(props: NewPostProps) {
       try {
         result = await props.api.newPost(
           fileContainer.file.originFileObj!!,
-          text
+          text ? text : ""
         );
       } catch (e) {}
       setConfirmLoading(false);
@@ -226,6 +230,7 @@ function NewPost(props: NewPostProps) {
       okButtonProps={{ disabled: fileList.length === 0 }}
       onOk={onSubmit}
       confirmLoading={confirmLoading}
+      destroyOnClose
     >
       <Form form={form} preserve={false} name="validate_other">
         <Form.Item
@@ -319,15 +324,13 @@ function Feed(props: FeedProps) {
   return (
     <div className="feed">
       {props.posts.map((it, index) => (
-        <div className="outerCard" key={index}>
-          <Card className="card">
-            <Image className="image" src={it.images[0].full_src} alt="image" />
-            <Meta
-              style={{ marginTop: "16px" }}
-              title={it.text ? it.text : ""}
-            />
-          </Card>
-        </div>
+        <Card className="card" key={index}>
+          <Image className="image" src={it.images[0].full_src} alt="image" />
+          <Meta
+            style={{ marginTop: "16px" }}
+            title={it.text !== undefined ? it.text : ""}
+          />
+        </Card>
       ))}
     </div>
   );
@@ -413,6 +416,7 @@ function ViewSingleUserPosts(props: ViewSingleUserPostsProps) {
     <>
       <Button style={{ marginTop: "10px" }} type="link" onClick={_showModal}>
         {props.username}
+        <ExpandAltOutlined />
       </Button>
       <Modal
         footer={okButton()}

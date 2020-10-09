@@ -23,7 +23,7 @@ code {
   flex-direction: row;
   align-items: center;
   flex-wrap: wrap;
-  justify-content: space-evenly;
+  justify-content: center;
 }
 
 .rowCard {
@@ -51,10 +51,7 @@ code {
 
 .card {
   margin-top: 24px;
-}
-
-.outerCard {
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
+  align-items: center;
 }
