@@ -319,8 +319,8 @@ function Feed(props: FeedProps) {
   return (
     <div className="feed">
       {props.posts.map((it, index) => (
-        <div className="outerCard">
-          <Card className="card" key={index}>
+        <div className="outerCard" key={index}>
+          <Card className="card">
             <Image className="image" src={it.images[0].full_src} alt="image" />
             <Meta
               style={{ marginTop: "16px" }}
@@ -401,12 +401,25 @@ function ViewSingleUserPosts(props: ViewSingleUserPostsProps) {
     setShowModal(false);
   }
 
+  function okButton() {
+    return (
+      <Button type="primary" onClick={hideModal}>
+        Close
+      </Button>
+    );
+  }
+
   return (
     <>
       <Button style={{ marginTop: "10px" }} type="link" onClick={_showModal}>
         {props.username}
       </Button>
-      <Modal visible={showModal} onOk={hideModal}>
+      <Modal
+        footer={okButton()}
+        visible={showModal}
+        onOk={hideModal}
+        onCancel={hideModal}
+      >
         <Feed posts={posts} />
       </Modal>
     </>
