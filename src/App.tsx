@@ -21,7 +21,6 @@ import {
   UserAlreadyExistsError,
 } from "./api";
 import { DownOutlined, UploadOutlined } from "@ant-design/icons";
-import "./App.css";
 import { AuthToken, Post } from "./models";
 import HttpClient from "./api/client";
 import Modal from "antd/lib/modal/Modal";
@@ -30,6 +29,7 @@ import { UploadFile } from "antd/lib/upload/interface";
 import { useForm } from "antd/lib/form/Form";
 import { Store } from "antd/lib/form/interface";
 import "./App.css";
+import "./index.css";
 import { MenuInfo } from "rc-menu/lib/interface";
 import Meta from "antd/lib/card/Meta";
 
@@ -47,7 +47,7 @@ export default function App() {
 
 export enum SortBy {
   MOST_RECENT = "most_recent",
-  BY_USER = "by_user",
+  BY_USERS = "by_users",
 }
 
 function HistoryAwareApp() {
@@ -165,7 +165,6 @@ function NewPost(props: NewPostProps) {
       const fileContainer: UploadChangeParam = values.file;
       const text: string = values.text;
       let result;
-      console.log(values);
       setConfirmLoading(true);
       try {
         result = await props.api.newPost(
@@ -277,60 +276,16 @@ function Explore(props: ExploreProps) {
       if (key === SortBy.MOST_RECENT) {
         setSortMethod(SortBy.MOST_RECENT);
       } else {
-        setSortMethod(SortBy.BY_USER);
+        setSortMethod(SortBy.BY_USERS);
       }
     }
 
     const dropdownMenu = (
       <Menu onClick={onSortMethodClick}>
         <Menu.Item key={SortBy.MOST_RECENT}>Most Recent</Menu.Item>
-        <Menu.Item key={SortBy.BY_USER}>By User</Menu.Item>
+        <Menu.Item key={SortBy.BY_USERS}>By User</Menu.Item>
       </Menu>
     );
-
-    function renderMostRecent(posts: Array<Post>): React.ReactNode {
-      return (
-        <div className="feed">
-          {posts.map((it, index) => (
-            <Card className="card" key={index}>
-              <Image
-                className="image"
-                src={it.images[0].full_src}
-                alt="hello"
-              />
-              <Meta title={it.text ? it.text : ""} />
-            </Card>
-          ))}
-        </div>
-      );
-    }
-
-    function renderByUser(posts: Array<Post>): React.ReactNode {
-      const seenUsers: Set<string> = new Set();
-      const filteredPosts: Array<Post> = [];
-
-      posts.forEach((it) => {
-        if (!seenUsers.has(it.user_id)) {
-          seenUsers.add(it.user_id);
-          filteredPosts.push(it);
-        }
-      });
-
-      return (
-        <div className="rowFeed">
-          {filteredPosts.map((it, index) => (
-            <Card className="rowCard" key={index}>
-              <Image
-                className="image"
-                src={it.images[0].full_src}
-                alt="hello"
-              />
-              <Meta title={} />
-            </Card>
-          ))}
-        </div>
-      );
-    }
 
     return (
       <>
@@ -339,9 +294,11 @@ function Explore(props: ExploreProps) {
             Sort By <DownOutlined />
           </Button>
         </Dropdown>
-        {sortMethod === SortBy.MOST_RECENT
-          ? renderMostRecent(posts)
-          : renderByUser(posts)}
+        {sortMethod === SortBy.MOST_RECENT ? (
+          <Feed posts={posts} />
+        ) : (
+          <ExploreByUsers api={props.api} posts={posts} />
+        )}
       </>
     );
   }
@@ -351,6 +308,108 @@ function Explore(props: ExploreProps) {
       <h2 style={{ marginBottom: 0 }}>Explore</h2>
       {renderPosts(props.posts)}
     </div>
+  );
+}
+
+interface FeedProps {
+  posts: Array<Post>;
+}
+
+function Feed(props: FeedProps) {
+  return (
+    <div className="feed">
+      {props.posts.map((it, index) => (
+        <div className="outerCard">
+          <Card className="card" key={index}>
+            <Image className="image" src={it.images[0].full_src} alt="image" />
+            <Meta
+              style={{ marginTop: "16px" }}
+              title={it.text ? it.text : ""}
+            />
+          </Card>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+interface ExploreByUsersProps {
+  api: Api;
+  posts: Array<Post>;
+}
+
+function ExploreByUsers(props: ExploreByUsersProps) {
+  const [users, setUsers] = useState<Map<string, string>>(new Map());
+  const filteredPosts: Array<Post> = [];
+
+  useEffect(() => {
+    props.posts.forEach(async (it) => {
+      const user = await props.api.getUser(it.user_public_id);
+      setUsers(users.set(user.public_id, user.username));
+    });
+  }, [props.api, props.posts, users]);
+
+  const seenUsers: Set<string> = new Set();
+  props.posts.forEach((it) => {
+    if (!seenUsers.has(it.user_public_id)) {
+      seenUsers.add(it.user_public_id);
+      filteredPosts.push(it);
+    }
+  });
+
+  return (
+    <div className="rowFeed">
+      {filteredPosts.map((it, index) => (
+        <Card className="rowCard" key={index}>
+          <Image className="image" src={it.images[0].full_src} alt="image" />
+          <ViewSingleUserPosts
+            api={props.api}
+            userPublicId={it.user_public_id}
+            username={users.get(it.user_public_id)!!}
+            index={index}
+          />
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+interface ViewSingleUserPostsProps {
+  api: Api;
+  userPublicId: string;
+  username: string;
+  index: number;
+}
+
+function ViewSingleUserPosts(props: ViewSingleUserPostsProps) {
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [posts, setPosts] = useState<Array<Post>>([]);
+
+  useEffect(() => {
+    async function getPostsByUser() {
+      const posts = await props.api.getPostsByUser(props.userPublicId);
+      setPosts(posts);
+    }
+    getPostsByUser();
+  }, [props.api, props.userPublicId, showModal]);
+
+  function _showModal() {
+    setShowModal(true);
+  }
+
+  function hideModal() {
+    setShowModal(false);
+  }
+
+  return (
+    <>
+      <Button style={{ marginTop: "10px" }} type="link" onClick={_showModal}>
+        {props.username}
+      </Button>
+      <Modal visible={showModal} onOk={hideModal}>
+        <Feed posts={posts} />
+      </Modal>
+    </>
   );
 }
 

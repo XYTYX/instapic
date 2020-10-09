@@ -21,6 +21,9 @@ code {
 .rowFeed {
   display: flex;
   flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
 }
 
 .rowCard {
@@ -38,11 +41,20 @@ code {
   align-items: center;
 }
 
-.ascii {
-  font-family: monospace;
-  white-space: pre
-}
-
 .spaced {
   margin-top: 6px
+}
+
+.subtitle {
+  margin-top: 10px;
+}
+
+.card {
+  margin-top: 24px;
+}
+
+.outerCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
 }

@@ -3,7 +3,7 @@ import HttpClient, {
   InternalServerError,
   UnauthorizedError,
 } from "./client";
-import { AuthToken, Post } from "../models";
+import { AuthToken, Post, User } from "../models";
 import { SortBy } from "../App";
 
 export interface Api {
@@ -12,6 +12,8 @@ export interface Api {
   logout(): Promise<void>;
   getPosts(sortBy: SortBy): Promise<Array<Post>>;
   newPost(file: File | Blob, text: string): Promise<Post>;
+  getUser(publicId: string): Promise<User>;
+  getPostsByUser(userPublicId: string): Promise<Array<Post>>;
 }
 
 export class ApiImpl implements Api {
@@ -23,12 +25,36 @@ export class ApiImpl implements Api {
     this._client = client;
   }
 
-  async logout(): Promise<void> {
-    const path = "/v1/auth/logout";
+  async getPostsByUser(userPublicId: string): Promise<Array<Post>> {
+    const path = `/v1/post/${userPublicId}`;
     let result: Response;
 
     try {
-      result = await this._client.doPostJson(path, {});
+      result = await this._client.doGet(path, null);
+    } catch (e) {
+      throw e;
+    }
+
+    return result.json()!!;
+  }
+
+  async getUser(userPublicId: string): Promise<User> {
+    const path = `/v1/user/${userPublicId}`;
+    let result: Response;
+
+    try {
+      result = await this._client.doGet(path, null);
+    } catch (e) {
+      throw e;
+    }
+    return result.json()!!;
+  }
+
+  async logout(): Promise<void> {
+    const path = "/v1/auth/logout";
+
+    try {
+      await this._client.doPostJson(path, {});
     } catch (e) {
       throw e;
     }
@@ -59,16 +85,13 @@ export class ApiImpl implements Api {
       });
       return result.json()!!;
     } catch (e) {
-      switch (e) {
-        case e instanceof UnauthorizedError: {
-          throw new LoginFailedError();
-        }
-        case e instanceof InternalServerError: {
-          throw new DownstreamError();
-        }
-        default: {
-          throw e;
-        }
+      if (e instanceof UnauthorizedError) {
+        throw new LoginFailedError();
+      }
+      if (e instanceof InternalServerError) {
+        throw new DownstreamError();
+      } else {
+        throw e;
       }
     }
   }

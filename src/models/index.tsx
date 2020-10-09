@@ -1,6 +1,7 @@
 export interface User {
   email: string;
   username: string;
+  public_id: string;
 }
 
 export interface AuthToken {
@@ -12,7 +13,7 @@ export interface Post {
   text: string | undefined;
   images: Array<Image>;
   created_on: string;
-  user_id: string;
+  user_public_id: string;
 }
 
 export interface Image {
