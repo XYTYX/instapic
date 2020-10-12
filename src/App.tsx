@@ -83,6 +83,7 @@ function HistoryAwareApp() {
 
   async function logout() {
     await api.current.logout();
+    cookies.remove("instapic_jwt");
     setAuthToken("");
   }
 
@@ -448,7 +449,10 @@ function Login(props: LoginProps) {
     try {
       response = await props.api.login(email, password);
       const cookies = new Cookies();
-      cookies.set("instapic_jwt", response.authorization);
+      const d1 = new Date();
+      const d2 = new Date();
+      d2.setMinutes(d1.getMinutes() + 15);
+      cookies.set("instapic_jwt", response.authorization, { expires: d2 });
       props.setAuthToken(response.authorization);
     } catch (e) {
       if (e instanceof LoginFailedError) {
