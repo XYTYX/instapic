@@ -14,6 +14,7 @@ export interface Api {
   newPost(file: File | Blob, text: string): Promise<Post>;
   getUser(publicId: string): Promise<User>;
   getPostsByUser(userPublicId: string): Promise<Array<Post>>;
+  getAllUsers(): Promise<Array<User>>;
 }
 
 export class ApiImpl implements Api {
@@ -23,6 +24,19 @@ export class ApiImpl implements Api {
 
   setClient(client: HttpClient) {
     this._client = client;
+  }
+
+  async getAllUsers(): Promise<Array<User>> {
+    const path = `/v1/user`;
+    let result: Response;
+
+    try {
+      result = await this._client.doGet(path, null);
+    } catch (e) {
+      throw e;
+    }
+
+    return result.json()!!;
   }
 
   async getPostsByUser(userPublicId: string): Promise<Array<Post>> {
