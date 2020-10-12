@@ -2,17 +2,7 @@ import { createBrowserHistory } from "history";
 import React, { useEffect, useRef, useState } from "react";
 import { Redirect, Route, Router, Switch } from "react-router";
 import { Link } from "react-router-dom";
-import {
-  Input,
-  Form,
-  Card,
-  Button,
-  Upload,
-  message,
-  Image,
-  Menu,
-  Dropdown,
-} from "antd";
+import { Input, Form, Button, message } from "antd";
 import {
   Api,
   ApiImpl,
@@ -20,23 +10,11 @@ import {
   LoginFailedError,
   UserAlreadyExistsError,
 } from "./api";
-import {
-  DownOutlined,
-  ExpandAltOutlined,
-  UploadOutlined,
-} from "@ant-design/icons";
 import { AuthToken, Post } from "./models";
 import HttpClient from "./api/client";
-import Modal from "antd/lib/modal/Modal";
-import { UploadChangeParam } from "antd/lib/upload";
-import { UploadFile } from "antd/lib/upload/interface";
-import { useForm } from "antd/lib/form/Form";
-import { Store } from "antd/lib/form/interface";
 import { Cookies } from "react-cookie";
 import "./App.css";
 import "./index.css";
-import { MenuInfo } from "rc-menu/lib/interface";
-import Meta from "antd/lib/card/Meta";
 import { NewPostModal, Explore } from "./components";
 
 export default function App() {
@@ -165,8 +143,6 @@ interface LoginProps {
 }
 
 function Login(props: LoginProps) {
-  const [error, setError] = useState<string>("");
-
   async function onSubmit({ email, password }: any) {
     let response: AuthToken;
     try {
