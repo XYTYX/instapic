@@ -12,6 +12,11 @@ code {
     monospace;
 }
 
+.topBarButton {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
 .feed {
   display: flex;
   flex-direction: column;

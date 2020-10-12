@@ -1,5 +1,5 @@
 import { DownOutlined } from "@ant-design/icons";
-import { Button, Dropdown, Menu } from "antd";
+import { Button, Dropdown, Menu, Pagination } from "antd";
 import React, { useState, useEffect } from "react";
 import { Api } from "../api";
 import { SortBy } from "../App";
@@ -11,14 +11,16 @@ import { ExploreByUsers } from ".";
 interface ExploreProps {
   api: Api;
   posts: Array<Post>;
-  getPosts(sortBy: SortBy): void;
+  getPosts(sortBy: SortBy, offset: number | null, limit: number | null): void;
 }
 
 export function Explore(props: ExploreProps) {
   const [sortMethod, setSortMethod] = useState<SortBy>(SortBy.MOST_RECENT);
+  const [offset, setOffset] = useState<number | undefined>(0);
+  const [limit, setLimit] = useState<number | undefined>(3);
 
   useEffect(() => {
-    props.getPosts(sortMethod);
+    props.getPosts(sortMethod, null, null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortMethod]);
 
@@ -33,6 +35,12 @@ export function Explore(props: ExploreProps) {
       } else {
         setSortMethod(SortBy.BY_USERS);
       }
+    }
+
+    function onNextPage(pageNumber: number, pageSize: number | undefined) {
+      const actualPageSize = pageSize ? pageSize : 3;
+      setOffset((pageNumber - 1) * actualPageSize);
+      setLimit(actualPageSize);
     }
 
     const dropdownMenu = (
@@ -50,7 +58,16 @@ export function Explore(props: ExploreProps) {
           </Button>
         </Dropdown>
         {sortMethod === SortBy.MOST_RECENT ? (
-          <Feed posts={posts} />
+          <>
+            <Feed posts={posts.slice(offset, offset!! + limit!!)} />
+            <Pagination
+              style={{ marginTop: "12px", marginBottom: "12px" }}
+              onChange={onNextPage}
+              defaultCurrent={1}
+              total={posts.length}
+              pageSize={limit}
+            />
+          </>
         ) : (
           <ExploreByUsers api={props.api} posts={posts} />
         )}

@@ -13,7 +13,7 @@ interface NewPostProps {
   api: Api;
   visible: boolean;
   hideModal(): void;
-  getPosts(sortBy: SortBy): void;
+  getPosts(sortBy: SortBy, offset: number | null, limit: number | null): void;
 }
 
 export function NewPostModal(props: NewPostProps) {
@@ -25,10 +25,9 @@ export function NewPostModal(props: NewPostProps) {
     form.validateFields().then(async (values: Store) => {
       const fileContainer: UploadChangeParam = values.file;
       const text: string = values.text;
-      let result;
       setConfirmLoading(true);
       try {
-        result = await props.api.newPost(
+        await props.api.newPost(
           fileContainer.file.originFileObj!!,
           text ? text : ""
         );
@@ -36,7 +35,7 @@ export function NewPostModal(props: NewPostProps) {
       setConfirmLoading(false);
       props.hideModal();
       try {
-        await props.getPosts(SortBy.MOST_RECENT);
+        await props.getPosts(SortBy.MOST_RECENT, 0, 10);
       } catch (e) {}
     });
   }

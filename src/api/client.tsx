@@ -79,7 +79,7 @@ export default class HttpClient {
   private _authToken: string;
 }
 
-interface QueryParams {
+export interface QueryParams {
   [key: string]: string;
 }
 

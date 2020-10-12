@@ -1,6 +1,7 @@
 import HttpClient, {
   ConflictError,
   InternalServerError,
+  QueryParams,
   UnauthorizedError,
 } from "./client";
 import { AuthToken, Post, User } from "../models";
@@ -10,7 +11,11 @@ export interface Api {
   login(email: string, password: string): Promise<AuthToken>;
   signup(email: string, username: string, password: string): Promise<AuthToken>;
   logout(): Promise<void>;
-  getPosts(sortBy: SortBy): Promise<Array<Post>>;
+  getPosts(
+    sortBy: SortBy,
+    offset: number | null,
+    limit: number | null
+  ): Promise<Array<Post>>;
   newPost(file: File | Blob, text: string): Promise<Post>;
   getUser(publicId: string): Promise<User>;
   getPostsByUser(userPublicId: string): Promise<Array<Post>>;
@@ -133,12 +138,24 @@ export class ApiImpl implements Api {
     }
   }
 
-  async getPosts(sortBy: SortBy): Promise<Array<Post>> {
+  async getPosts(
+    sortBy: SortBy,
+    offset: number | null,
+    limit: number | null
+  ): Promise<Array<Post>> {
     let result: Response;
 
-    const queryParams = {
+    let queryParams: QueryParams = {
       sort_by: sortBy,
     };
+
+    if (limit !== null && offset !== null) {
+      queryParams = {
+        sort_by: sortBy,
+        offset: String(offset),
+        limit: String(limit),
+      };
+    }
 
     try {
       result = await this._client.doGet("/v1/post", queryParams);

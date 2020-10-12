@@ -19,10 +19,29 @@ export function ExploreByUsers(props: ExploreByUsersProps) {
     })();
   }, [props.api, props.posts]);
 
+  const posts = props.posts.sort(sort);
+
+  function sort(first: Post, second: Post) {
+    var t1 = first.created_on.split(/[- :]/).map((it) => {
+      return Number(it);
+    });
+    var t2 = second.created_on.split(/[- :]/).map((it) => {
+      return Number(it);
+    });
+
+    var d1 = new Date(Date.UTC(t1[0], t1[1] - 1, t1[2], t1[3], t1[4], t1[5]));
+    var d2 = new Date(Date.UTC(t2[0], t2[1] - 1, t2[2], t2[3], t2[4], t2[5]));
+    if (d1 < d2) {
+      return 1;
+    } else {
+      return -1;
+    }
+  }
+
   return (
     <div className="rowFeed">
       {users.map((user, index) => {
-        const usersPosts = props.posts.filter((post) => {
+        const usersPosts = posts.filter((post) => {
           return post.user_public_id === user.public_id;
         });
         const possibleThumbnail = usersPosts[0]?.images[0]?.full_src;
