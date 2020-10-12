@@ -7,10 +7,10 @@ import { Post } from "../models";
 
 interface SingleUserFeed {
   username: string;
-  index: number;
   posts: Array<Post>;
 }
 
+// This component displays a single user's posts in a modal sorted by recency
 export function SingleUserFeed(props: SingleUserFeed) {
   const [showModal, setShowModal] = useState<boolean>(false);
 

@@ -7,7 +7,7 @@ import Upload, { UploadChangeParam } from "antd/lib/upload";
 import { UploadFile } from "antd/lib/upload/interface";
 import React, { useState } from "react";
 import { Api } from "../api";
-import { SortBy } from "../App";
+import { SortBy } from "./explore";
 
 interface NewPostProps {
   api: Api;
@@ -24,6 +24,8 @@ export function NewPostModal(props: NewPostProps) {
   function onSubmit() {
     form.validateFields().then(async (values: Store) => {
       const fileContainer: UploadChangeParam = values.file;
+      // We currently allow the customer to create a post without text, in this case
+      // default to an empty string
       const text: string = values.text;
       setConfirmLoading(true);
       try {
@@ -34,12 +36,14 @@ export function NewPostModal(props: NewPostProps) {
       } catch (e) {}
       setConfirmLoading(false);
       props.hideModal();
+      // Upon successful upload, refresh the feed to show the most recently uploaded post
       try {
-        await props.getPosts(SortBy.MOST_RECENT, 0, 10);
+        await props.getPosts(SortBy.MOST_RECENT, null, null);
       } catch (e) {}
     });
   }
 
+  // We only support uploading one picture per post at this time
   function onChange(info: UploadChangeParam) {
     let newFileList: Array<UploadFile> = [];
     switch (info.file.status) {
@@ -55,6 +59,7 @@ export function NewPostModal(props: NewPostProps) {
     setFileList(newFileList);
   }
 
+  // This function is required for the form component to not upload until submission confirmation
   function dummyRequest({ onSuccess }: any) {
     setTimeout(() => {
       onSuccess("ok");

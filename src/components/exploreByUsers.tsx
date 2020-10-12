@@ -9,6 +9,9 @@ interface ExploreByUsersProps {
   posts: Array<Post>;
 }
 
+// This component currently takes the posts from props and displays them
+// We could build a more robust but more bandwidth-intensive experience by fetching posts
+// per user upon click, but in this early stage, fetching all posts is still a low latency operation
 export function ExploreByUsers(props: ExploreByUsersProps) {
   const [users, setUsers] = useState<Array<User>>([]);
 
@@ -21,6 +24,8 @@ export function ExploreByUsers(props: ExploreByUsersProps) {
 
   const posts = props.posts.sort(sort);
 
+  // It makes the most sense when viewing a single user's photos for the most recent ones to come first,
+  // this helper method helps us parse sql timestamps into Javascript Date() objects
   function sort(first: Post, second: Post) {
     var t1 = first.created_on.split(/[- :]/).map((it) => {
       return Number(it);
@@ -56,11 +61,7 @@ export function ExploreByUsers(props: ExploreByUsersProps) {
               }
               alt="image"
             />
-            <SingleUserFeed
-              username={user.username}
-              index={0}
-              posts={usersPosts}
-            />
+            <SingleUserFeed username={user.username} posts={usersPosts} />
           </Card>
         );
       })}

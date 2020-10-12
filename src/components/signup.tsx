@@ -2,7 +2,7 @@ import { message, Input } from "antd";
 import Form from "antd/lib/form/Form";
 import FormItem from "antd/lib/form/FormItem";
 import React from "react";
-import { Api, UserAlreadyExistsError } from "../api";
+import { Api, DownstreamError, UserAlreadyExistsError } from "../api";
 import { AuthToken } from "../models";
 
 interface SignupProps {
@@ -20,6 +20,10 @@ export function Signup(props: SignupProps) {
       if (e instanceof UserAlreadyExistsError) {
         message.error(
           "That email or username already exists, did you mean to log in?"
+        );
+      } else if (e instanceof DownstreamError) {
+        message.error(
+          "Our systems seem to be experiencing issues, please try again later"
         );
       } else {
         throw e;

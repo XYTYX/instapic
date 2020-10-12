@@ -5,7 +5,7 @@ import HttpClient, {
   UnauthorizedError,
 } from "./client";
 import { AuthToken, Post, User } from "../models";
-import { SortBy } from "../App";
+import { SortBy } from "../components/explore";
 
 export interface Api {
   login(email: string, password: string): Promise<AuthToken>;
@@ -17,9 +17,9 @@ export interface Api {
     limit: number | null
   ): Promise<Array<Post>>;
   newPost(file: File | Blob, text: string): Promise<Post>;
+  getAllUsers(): Promise<Array<User>>;
   getUser(publicId: string): Promise<User>;
   getPostsByUser(userPublicId: string): Promise<Array<Post>>;
-  getAllUsers(): Promise<Array<User>>;
 }
 
 export class ApiImpl implements Api {
@@ -132,6 +132,8 @@ export class ApiImpl implements Api {
     } catch (e) {
       if (e instanceof ConflictError) {
         throw new UserAlreadyExistsError();
+      } else if (e instanceof InternalServerError) {
+        throw new DownstreamError();
       } else {
         throw e;
       }
@@ -161,7 +163,11 @@ export class ApiImpl implements Api {
       result = await this._client.doGet("/v1/post", queryParams);
       return result.json();
     } catch (e) {
-      throw e;
+      if (e instanceof InternalServerError) {
+        throw new DownstreamError();
+      } else {
+        throw e;
+      }
     }
   }
 

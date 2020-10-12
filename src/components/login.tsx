@@ -16,6 +16,8 @@ export function Login(props: LoginProps) {
     let response: AuthToken;
     try {
       response = await props.api.login(email, password);
+
+      // If the response is successful, set a cookie containing the auth token on the browser that is valid for 15 minutes
       const cookies = new Cookies();
       const d1 = new Date();
       const d2 = new Date();

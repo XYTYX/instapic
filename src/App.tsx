@@ -2,14 +2,14 @@ import { createBrowserHistory } from "history";
 import React, { useEffect, useRef, useState } from "react";
 import { Redirect, Route, Router, Switch } from "react-router";
 import { Link } from "react-router-dom";
-import { Button } from "antd";
-import { ApiImpl } from "./api";
+import { Button, message } from "antd";
+import { ApiImpl, DownstreamError } from "./api";
 import { Post } from "./models";
 import HttpClient from "./api/client";
 import { Cookies } from "react-cookie";
 import "./App.css";
-import "./index.css";
 import { NewPostModal, Explore, Login, Signup } from "./components";
+import { SortBy } from "./components/explore";
 
 export default function App() {
   const customHistory = createBrowserHistory();
@@ -23,13 +23,11 @@ export default function App() {
   );
 }
 
-export enum SortBy {
-  MOST_RECENT = "most_recent",
-  BY_USERS = "by_users",
-}
-
-function HistoryAwareApp() {
+export function HistoryAwareApp() {
   const [posts, setPosts] = useState<Array<Post>>([]);
+  const [visibleModal, setVisibleModal] = useState<boolean>(false);
+
+  // On app load, attempt to automatically log in the user via auth token stored in a cookie
   const cookies = new Cookies();
   const cookieJWT = cookies.get("instapic_jwt");
   const [authToken, setAuthToken] = useState<string>(
@@ -38,7 +36,11 @@ function HistoryAwareApp() {
   let httpClient = useRef(new HttpClient(authToken));
   let api = useRef(new ApiImpl(httpClient.current));
 
-  const [visibleModal, setVisibleModal] = useState<boolean>(false);
+  useEffect(() => {
+    // This hook sets up our clients with the proper auth token
+    httpClient.current.setAuthToken(authToken);
+    api.current.setClient(httpClient.current);
+  }, [authToken]);
 
   function showModal() {
     setVisibleModal(true);
@@ -50,41 +52,49 @@ function HistoryAwareApp() {
 
   async function getPosts(sortBy: SortBy, offset: number, limit: number) {
     let posts: Array<Post>;
-    posts = await api.current.getPosts(sortBy, offset, limit);
-    setPosts(posts);
+    try {
+      posts = await api.current.getPosts(sortBy, offset, limit);
+      setPosts(posts);
+    } catch (e) {
+      if (e instanceof DownstreamError) {
+        message.error(
+          "Our systems seem to be experiencing issues, please try again later"
+        );
+      } else {
+        throw e;
+      }
+    }
   }
 
   async function logout() {
+    // If the response is successful, log out the user, and delete the cookie containing the auth token
     await api.current.logout();
     cookies.remove("instapic_jwt");
     setAuthToken("");
   }
 
-  useEffect(() => {
-    httpClient.current.setAuthToken(authToken);
-    api.current.setClient(httpClient.current);
-  }, [authToken]);
-
+  // If the user does not have a valid auth token, show them the login and signup screens,
+  // if they do have a valid auth token, show them the explore screen
   return (
-    <div className="App">
+    <div className="App gradient">
       <p className="spaced"></p>
       <nav>
         {!authToken && (
           <>
-            <Link className="topBarButton" to="/login">
+            <Link className="navBarButton" to="/login">
               <Button>Log In</Button>
             </Link>
-            <Link className="topBarButton" to="/signup">
+            <Link className="navBarButton" to="/signup">
               <Button>Signup</Button>
             </Link>
           </>
         )}
         {authToken && (
           <>
-            <Link className="topBarButton" to="/explore">
+            <Link className="navBarButton" to="/explore">
               <Button>Explore</Button>
             </Link>
-            <Link className="topBarButton" to="new_post">
+            <Link className="navBarButton" to="new_post">
               <Button onClick={showModal}>New Post</Button>
               <NewPostModal
                 getPosts={getPosts}
@@ -93,7 +103,7 @@ function HistoryAwareApp() {
                 api={api.current}
               />
             </Link>
-            <Button className="topBarButton" onClick={logout}>
+            <Button className="navBarButton" onClick={logout}>
               Log Out
             </Button>
           </>

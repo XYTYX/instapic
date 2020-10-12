@@ -8,6 +8,7 @@ interface FeedProps {
   posts: Array<Post>;
 }
 
+// Displays posts in a vertical fashion
 export function Feed(props: FeedProps) {
   return (
     <div className="feed">

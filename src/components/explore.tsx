@@ -2,11 +2,15 @@ import { DownOutlined } from "@ant-design/icons";
 import { Button, Dropdown, Menu, Pagination } from "antd";
 import React, { useState, useEffect } from "react";
 import { Api } from "../api";
-import { SortBy } from "../App";
 import { Post } from "../models";
 import { MenuInfo } from "rc-menu/lib/interface";
 import { Feed } from "./feed";
 import { ExploreByUsers } from ".";
+
+export enum SortBy {
+  MOST_RECENT = "most_recent",
+  BY_USERS = "by_users",
+}
 
 interface ExploreProps {
   api: Api;
@@ -16,8 +20,9 @@ interface ExploreProps {
 
 export function Explore(props: ExploreProps) {
   const [sortMethod, setSortMethod] = useState<SortBy>(SortBy.MOST_RECENT);
-  const [offset, setOffset] = useState<number | undefined>(0);
-  const [limit, setLimit] = useState<number | undefined>(3);
+  const [offset, setOffset] = useState<number>(0);
+  // Setting the limit per screen to 3
+  const [limit, setLimit] = useState<number>(3);
 
   useEffect(() => {
     props.getPosts(sortMethod, null, null);
@@ -50,6 +55,7 @@ export function Explore(props: ExploreProps) {
       </Menu>
     );
 
+    // If the user decides to sort by most recently uploaded, we paginate to improve performance
     return (
       <>
         <Dropdown overlay={dropdownMenu} trigger={["click"]}>
