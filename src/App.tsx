@@ -32,6 +32,7 @@ import { UploadChangeParam } from "antd/lib/upload";
 import { UploadFile } from "antd/lib/upload/interface";
 import { useForm } from "antd/lib/form/Form";
 import { Store } from "antd/lib/form/interface";
+import { Cookies } from "react-cookie";
 import "./App.css";
 import "./index.css";
 import { MenuInfo } from "rc-menu/lib/interface";
@@ -55,8 +56,12 @@ export enum SortBy {
 }
 
 function HistoryAwareApp() {
-  const [authToken, setAuthToken] = useState<string>("");
   const [posts, setPosts] = useState<Array<Post>>([]);
+  const cookies = new Cookies();
+  const cookieJWT = cookies.get("instapic_jwt");
+  const [authToken, setAuthToken] = useState<string>(
+    cookieJWT ? cookieJWT : ""
+  );
   let httpClient = useRef(new HttpClient(authToken));
   let api = useRef(new ApiImpl(httpClient.current));
 
@@ -442,6 +447,8 @@ function Login(props: LoginProps) {
     let response: AuthToken;
     try {
       response = await props.api.login(email, password);
+      const cookies = new Cookies();
+      cookies.set("instapic_jwt", response.authorization);
       props.setAuthToken(response.authorization);
     } catch (e) {
       if (e instanceof LoginFailedError) {
