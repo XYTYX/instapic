@@ -15,17 +15,18 @@ export default function App() {
   const customHistory = createBrowserHistory();
 
   return (
-    <div className="App">
+    <>
       <Router history={customHistory}>
         <HistoryAwareApp />
       </Router>
-    </div>
+    </>
   );
 }
 
 export function HistoryAwareApp() {
   const [posts, setPosts] = useState<Array<Post>>([]);
   const [visibleModal, setVisibleModal] = useState<boolean>(false);
+  const [inherit, setInherit] = useState<boolean>(false);
 
   // On app load, attempt to automatically log in the user via auth token stored in a cookie
   const cookies = new Cookies();
@@ -76,9 +77,8 @@ export function HistoryAwareApp() {
   // If the user does not have a valid auth token, show them the login and signup screens,
   // if they do have a valid auth token, show them the explore screen
   return (
-    <div className="App gradient">
-      <p className="spaced"></p>
-      <nav>
+    <div className="App" style={inherit ? { height: "inherit" } : undefined}>
+      <div className="navBar">
         {!authToken && (
           <>
             <Link className="navBarButton" to="/login">
@@ -108,37 +108,50 @@ export function HistoryAwareApp() {
             </Button>
           </>
         )}
-      </nav>
-      <Switch>
-        <Route path="/login">
-          {authToken ? (
-            <Redirect to="/" />
-          ) : (
-            <Login api={api.current} setAuthToken={setAuthToken} />
-          )}
-        </Route>
-        <Route path="/signup">
-          {authToken ? (
-            <Redirect to="/" />
-          ) : (
-            <Signup api={api.current} setAuthToken={setAuthToken} />
-          )}
-        </Route>
-        <Route path="/explore">
-          {!authToken ? (
-            <Redirect to="login" />
-          ) : (
-            <Explore posts={posts} getPosts={getPosts} api={api.current} />
-          )}
-        </Route>
-        <Route path="/">
-          {!authToken ? (
-            <Redirect to="login" />
-          ) : (
-            <Explore posts={posts} getPosts={getPosts} api={api.current} />
-          )}
-        </Route>
-      </Switch>
+      </div>
+      <div className="body gradient">
+        <p className="spaced"></p>
+        <Switch>
+          <Route path="/login">
+            {authToken ? (
+              <Redirect to="/" />
+            ) : (
+              <Login api={api.current} setAuthToken={setAuthToken} />
+            )}
+          </Route>
+          <Route path="/signup">
+            {authToken ? (
+              <Redirect to="/" />
+            ) : (
+              <Signup api={api.current} setAuthToken={setAuthToken} />
+            )}
+          </Route>
+          <Route path="/explore">
+            {!authToken ? (
+              <Redirect to="login" />
+            ) : (
+              <Explore
+                setInherit={setInherit}
+                posts={posts}
+                getPosts={getPosts}
+                api={api.current}
+              />
+            )}
+          </Route>
+          <Route path="/">
+            {!authToken ? (
+              <Redirect to="login" />
+            ) : (
+              <Explore
+                setInherit={setInherit}
+                posts={posts}
+                getPosts={getPosts}
+                api={api.current}
+              />
+            )}
+          </Route>
+        </Switch>
+      </div>
     </div>
   );
 }

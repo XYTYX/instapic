@@ -4,6 +4,44 @@
   text-align: center;
 }
 
+.gradient {
+  background: linear-gradient(173deg, #bd91f0, #5ce6d5);
+  background-size: 400% 400%;
+
+  -webkit-animation: AnimationName 50s ease infinite;
+  -moz-animation: AnimationName 50s ease infinite;
+  animation: AnimationName 50s ease infinite;
+}
+
+@-webkit-keyframes AnimationName {
+  0%{background-position:61% 0%}
+  50%{background-position:40% 100%}
+  100%{background-position:61% 0%}
+}
+@-moz-keyframes AnimationName {
+  0%{background-position:61% 0%}
+  50%{background-position:40% 100%}
+  100%{background-position:61% 0%}
+}
+@keyframes AnimationName {
+  0%{background-position:61% 0%}
+  50%{background-position:40% 100%}
+  100%{background-position:61% 0%}
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: inherit;
+}
+
+.navBar {
+  margin-top: 10px;
+  position: absolute;
+  right: 10px;
+}
+
 .navBarButton {
   margin-left: 5px;
   margin-right: 5px;
@@ -16,11 +54,17 @@
 }
 
 .rowFeed {
+  margin-top: 10px;
   display: flex;
   flex-direction: row;
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+.float {
+  background: white;
+  padding: 20px;
 }
 
 .rowCard {
@@ -35,6 +79,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
 }
 
 .spaced {
@@ -50,4 +97,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.shadowed { 
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)
 }

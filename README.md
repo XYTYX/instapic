@@ -53,6 +53,10 @@ In production, this is the frontend for a flask service, [Instapic-Serv](https:/
 
 This app is built using [Ant Design](https://ant.design/), check out their API for more information.
 
+## Debugging
+
+It is highly recommended that you install the [React Dev Tools](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en) to get a better idea of what's going on. It also doesn't hurt to run `yarn cache clean` every once in a while.
+
 ## Learn More
 
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).

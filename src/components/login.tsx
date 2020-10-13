@@ -41,29 +41,31 @@ export function Login(props: LoginProps) {
 
   return (
     <div className="authForm">
-      <h2 className="spaced">Log In</h2>
-      <Form onFinish={onSubmit}>
-        <FormItem
-          required
-          label="Email"
-          name="email"
-          rules={[
-            { required: true, message: "Please enter an email" },
-            { type: "email" },
-          ]}
-        >
-          <Input />
-        </FormItem>
-        <FormItem
-          required
-          label="Password"
-          name="password"
-          rules={[{ required: true, message: "Please enter a password" }]}
-        >
-          <Input.Password />
-        </FormItem>
-        <button>Log In</button>
-      </Form>
+      <div className="float shadowed">
+        <h2>Log In</h2>
+        <Form onFinish={onSubmit}>
+          <FormItem
+            required
+            label="Email"
+            name="email"
+            rules={[
+              { required: true, message: "Please enter an email" },
+              { type: "email" },
+            ]}
+          >
+            <Input />
+          </FormItem>
+          <FormItem
+            required
+            label="Password"
+            name="password"
+            rules={[{ required: true, message: "Please enter a password" }]}
+          >
+            <Input.Password />
+          </FormItem>
+          <button>Log In</button>
+        </Form>
+      </div>
     </div>
   );
 }

@@ -16,6 +16,7 @@ interface ExploreProps {
   api: Api;
   posts: Array<Post>;
   getPosts(sortBy: SortBy, offset: number | null, limit: number | null): void;
+  setInherit(inherit: boolean): void;
 }
 
 export function Explore(props: ExploreProps) {
@@ -36,8 +37,10 @@ export function Explore(props: ExploreProps) {
 
     function onSortMethodClick({ key }: MenuInfo) {
       if (key === SortBy.MOST_RECENT) {
+        props.setInherit(false);
         setSortMethod(SortBy.MOST_RECENT);
       } else {
+        props.setInherit(true);
         setSortMethod(SortBy.BY_USERS);
       }
     }
@@ -83,7 +86,9 @@ export function Explore(props: ExploreProps) {
 
   return (
     <div className="spaced">
-      <h2 style={{ marginBottom: 0 }}>Explore</h2>
+      <h1 className="bordered" style={{ marginBottom: 0 }}>
+        Explore
+      </h1>
       {renderPosts(props.posts)}
     </div>
   );
