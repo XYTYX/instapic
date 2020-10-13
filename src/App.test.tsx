@@ -9,7 +9,7 @@ import { SortBy } from "./components/explore";
 import { Post, User } from "./models";
 import Adapter from "enzyme-adapter-react-16";
 import { DownOutlined } from "@ant-design/icons";
-import { Button, Card, Image } from "antd";
+import { Button, Image } from "antd";
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,
